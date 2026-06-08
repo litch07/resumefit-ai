@@ -11,7 +11,6 @@ _non_alnum_re = re.compile(r"[^a-zA-Z0-9\s]")
 
 def _get_stopwords() -> set[str]:
     """Load English stopwords, downloading the corpus if needed."""
-    # Lazy-load and fallback download for NLTK English stopwords.
     try:
         return set(stopwords.words("english"))
     except LookupError:
@@ -25,15 +24,10 @@ def _normalize_whitespace(text: str) -> str:
 
 
 def clean_text(text: Optional[str]) -> str:
-    """
-    Lowercase, remove special characters, and normalize spacing.
-
-    Edge cases: None, empty, or very short inputs return "".
-    """
+    """Lowercase, remove special characters, and normalize spacing."""
     if not text or not text.strip():
         return ""
 
-    # Normalize text: lowercase, remove special chars, and collapse whitespace.
     cleaned = text.lower()
     cleaned = _non_alnum_re.sub(" ", cleaned)
     cleaned = _normalize_whitespace(cleaned)
@@ -45,15 +39,10 @@ def clean_text(text: Optional[str]) -> str:
 
 
 def remove_stopwords(text: Optional[str]) -> str:
-    """
-    Remove English stopwords using NLTK.
-
-    Edge cases: None, empty, or very short inputs return "".
-    """
+    """Remove English stopwords from the given text."""
     if not text or not text.strip():
         return ""
 
-    # Remove English stopwords to reduce noise.
     stops = _get_stopwords()
     words = [word for word in text.split() if word.lower() not in stops]
     filtered = " ".join(words)
@@ -70,14 +59,10 @@ def preprocess(text: Optional[str]) -> str:
 
 
 def preprocess_for_display(text: Optional[str]) -> str:
-    """
-    Preprocess for UI display: remove special characters and stopwords,
-    but preserve the original casing of kept words.
-    """
+    """Remove special characters and stopwords while preserving casing."""
     if not text or not text.strip():
         return ""
 
-    # UI preprocessing: strip special chars and stopwords while preserving casing.
     cleaned = _non_alnum_re.sub(" ", text)
     cleaned = _normalize_whitespace(cleaned)
     if len(cleaned) < 2:

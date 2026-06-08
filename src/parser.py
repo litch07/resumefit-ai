@@ -1,21 +1,14 @@
-"""File parsers for ResumeFit AI."""
-
 from __future__ import annotations
 
 from io import BytesIO
-from typing import Union
 
 import pdfplumber
 from PyPDF2 import PdfReader
 from docx import Document
 
 
-FileLike = Union[bytes, bytearray, BytesIO]
-
-
 def _to_bytes_io(file: object) -> BytesIO:
     """Normalize file inputs into a BytesIO stream for parsers."""
-    # Normalize varying file input types into a standard BytesIO stream.
     try:
         if isinstance(file, (bytes, bytearray)):
             return BytesIO(file)
@@ -39,7 +32,6 @@ def _to_bytes_io(file: object) -> BytesIO:
 
 def extract_text_from_pdf(file: object) -> str:
     """Extract text from a PDF using pdfplumber, fallback to PyPDF2."""
-    # Attempt pdfplumber for accurate layout parsing; fallback to PyPDF2.
     try:
         file_stream = _to_bytes_io(file)
         with pdfplumber.open(file_stream) as pdf:
@@ -59,7 +51,6 @@ def extract_text_from_pdf(file: object) -> str:
 
 def extract_text_from_docx(file: object) -> str:
     """Extract text from a DOCX file using python-docx."""
-    # Extract DOCX text iteratively by paragraph.
     try:
         file_stream = _to_bytes_io(file)
         doc = Document(file_stream)
@@ -94,7 +85,6 @@ def extract_text_from_txt(file: object) -> str:
 
 def extract_text(file: object, filename: str) -> str:
     """Route extraction based on file extension (pdf, docx, txt)."""
-    # Route extraction to the appropriate parser based on file extension.
     try:
         extension = filename.lower().rsplit(".", 1)[-1]
     except Exception:

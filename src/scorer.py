@@ -1,53 +1,44 @@
-from __future__ import annotations
-
-from typing import List, Dict
-
 from .embedder import get_similarity_score
 from .keyword_extractor import extract_keywords, find_missing_keywords
-from .preprocessor import preprocess, clean_text
+from .preprocessor import preprocess
 
 
-def _count_words(text: str) -> int:
+def _count_words(text):
     if not text or not text.strip():
         return 0
-
-    cleaned = clean_text(text)
-    if not cleaned:
-        return 0
-
-    return len(cleaned.split())
+    return len(text.split())
 
 
-def _score_label(score: float) -> str:
-    if score > 80:
-        return "Excellent"
-    if score > 60:
-        return "Good"
-    if score > 40:
-        return "Fair"
+def _score_label(score):
+    if score >= 80:
+        return "Excellent Match"
+    if score >= 60:
+        return "Good Match"
+    if score >= 40:
+        return "Fair Match"
     return "Needs Work"
 
 
-def _score_color(score: float) -> str:
-    if score > 80:
-        return "#059669"  # green
-    if score > 60:
-        return "#0EA5E9"  # teal
-    if score > 40:
-        return "#F59E0B"  # amber
-    return "#EF4444"  # red
+def _score_color(score):
+    if score >= 80:
+        return "#16A34A"
+    if score >= 60:
+        return "#2563EB"
+    if score >= 40:
+        return "#D97706"
+    return "#DC2626"
 
 
-def generate_suggestions(missing_keywords: List[str]) -> List[str]:
+def generate_suggestions(missing_keywords):
+    """Return up to 5 human-readable improvement tips from missing keywords."""
     if not missing_keywords:
         return ["Great job! Your resume already covers the key job requirements."]
 
-    suggestions: List[str] = []
+    suggestions = []
     for keyword in missing_keywords[:5]:
         keyword_clean = keyword.strip()
         if not keyword_clean:
             continue
-
         suggestions.append(
             f"Consider adding {keyword_clean} to your skills or experience sections"
         )
@@ -58,18 +49,14 @@ def generate_suggestions(missing_keywords: List[str]) -> List[str]:
     return suggestions
 
 
-def analyze(resume_text: str, job_description_text: str, model) -> Dict[str, object]:
-    """
-    Analyze resume vs. job description and return score, keywords, and suggestions.
-    """
-    # Orchestrate analysis: semantic scoring, keyword extraction, and gap identification.
+def analyze(resume_text, job_description, model):
+    """Run the full resume-vs-JD analysis pipeline and return results dict."""
     resume_clean = preprocess(resume_text)
-    jd_clean = preprocess(job_description_text)
+    jd_clean = preprocess(job_description)
 
-    # Compute SBERT semantic similarity score.
     score = get_similarity_score(resume_clean, jd_clean, model)
 
-    jd_keywords = extract_keywords(job_description_text, top_n=20)
+    jd_keywords = extract_keywords(job_description, top_n=20)
     missing_keywords = find_missing_keywords(resume_text or "", jd_keywords)
     suggestions = generate_suggestions(missing_keywords)
 
@@ -80,6 +67,7 @@ def analyze(resume_text: str, job_description_text: str, model) -> Dict[str, obj
         "missing_keywords": missing_keywords,
         "jd_keywords": jd_keywords,
         "suggestions": suggestions[:5],
+        # Word counts on original text, not preprocessed
         "resume_word_count": _count_words(resume_text or ""),
-        "jd_word_count": _count_words(job_description_text or ""),
+        "jd_word_count": _count_words(job_description or ""),
     }

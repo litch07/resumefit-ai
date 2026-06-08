@@ -7,7 +7,6 @@
   <title>ResumeFit AI | Calibrate Your Resume</title>
   <link rel="icon" href="/static/assets/logo.svg" type="image/svg+xml">
 
-
   <meta name="description"
     content="Cryptographic-level resume calibration. Compare your resume against target job descriptions with zero data retention.">
   <link rel="stylesheet" href="/static/style.css?v=15">
@@ -20,7 +19,6 @@
 
 <body>
 
-  <!-- Top navigation bar -->
   <header role="banner" class="global-header">
     <div class="header-container">
       <a href="/" class="brand-logo" aria-label="ResumeFit AI Home">
@@ -34,12 +32,6 @@
         <span class="cmd-icon" aria-hidden="true" id="cmd-key-icon">Ctrl</span>
         <span class="cmd-text" id="cmd-key-text"> + K for commands</span>
       </button>
-      <script>
-        if (navigator.userAgent.indexOf('Mac') !== -1) {
-          document.getElementById('cmd-key-icon').textContent = '⌘';
-          document.getElementById('cmd-key-text').textContent = ' K for commands';
-        }
-      </script>
 
       <nav class="header-nav" aria-label="Primary navigation">
         <a href="/" class="nav-link active">Workspace</a>
@@ -48,10 +40,8 @@
     </div>
   </header>
 
-  <!-- The main content of the page -->
   <main id="main-content" role="main">
 
-    <!-- Command center (where users upload their resume) -->
     <section id="state-command-center" class="command-center active" aria-labelledby="hero-title">
 
       <div class="hero">
@@ -120,7 +110,6 @@
       </div>
     </section>
 
-    <!-- The results area (designed to look like a code editor) -->
     <section id="state-ide-canvas" class="ide-canvas" aria-hidden="true" style="display: none;">
 
       <header class="results-top-bar">
@@ -175,7 +164,6 @@
 
       </div>
 
-      <!-- The slide-out drawer showing tasks and insights -->
       <aside class="commits-drawer" aria-label="Improvement Tasks">
         <header class="drawer-header">
           <h2 class="drawer-title" id="drawer-title">Analysis Insights</h2>
@@ -199,7 +187,6 @@
     </section>
   </main>
 
-  <!-- Page footer -->
   <footer role="contentinfo" class="global-footer">
     <div class="footer-container">
       <div class="footer-brand-section">
@@ -222,7 +209,6 @@
     </div>
   </footer>
 
-  <!-- Load the main JavaScript file -->
   <script src="/static/script.js?v=5"></script>
 
 </body>

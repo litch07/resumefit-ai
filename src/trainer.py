@@ -1,7 +1,3 @@
-"""Train a job role classifier for ResumeFit AI."""
-
-from __future__ import annotations
-
 import re
 from pathlib import Path
 
@@ -9,27 +5,26 @@ import joblib
 import pandas as pd
 from scipy.sparse import hstack
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.svm import LinearSVC
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.model_selection import StratifiedKFold, cross_val_score, train_test_split
 from sklearn.preprocessing import LabelEncoder
+from sklearn.svm import LinearSVC
 
 
-def clean_resume_text(text: str) -> str:
-    """Clean resume text with a simple, consistent pipeline."""
+def clean_resume_text(text):
+    """Lowercase, strip special chars, collapse whitespace."""
     text = text.lower()
     text = re.sub(r"[^a-z0-9\s]", " ", text)
     text = re.sub(r"\s+", " ", text)
     return text.strip()
 
 
-def main() -> None:
+def main():
     """Train a resume classifier and update the job description dataset."""
     resumes_path = Path("data") / "processed" / "resumes_clean.csv"
     job_desc_path = Path("data") / "processed" / "job_descriptions_clean.csv"
     models_dir = Path("models")
 
-    # Step 1: Load raw resume dataset.
     print("Step 1/9: Loading resumes_clean.csv...")
     if not resumes_path.exists():
         raise FileNotFoundError(f"Missing dataset: {resumes_path}")
@@ -38,7 +33,6 @@ def main() -> None:
     if resumes_df.empty:
         raise ValueError("Resume dataset is empty.")
 
-    # Step 2: Drop rows missing Resume or Category data.
     print("Step 2/9: Dropping empty Resume/Category rows...")
     resumes_df = resumes_df.dropna(subset=["Resume", "Category"])
     resumes_df = resumes_df[resumes_df["Resume"].astype(str).str.strip().ne("")]
@@ -49,22 +43,17 @@ def main() -> None:
     print(f"Rows loaded: {total_rows}")
     print(f"Unique categories: {unique_categories}")
 
-    # Step 3: Clean resume text using standard preprocessor.
-    print("Step 4/9: Cleaning resume text...")
+    print("Step 3/9: Cleaning resume text...")
     resumes_df["clean_resume"] = resumes_df["Resume"].astype(str).apply(clean_resume_text)
     resumes_df = resumes_df[resumes_df["clean_resume"].str.len() > 0]
     if resumes_df.empty:
         raise ValueError("No usable rows after cleaning resume text.")
 
-    # Step 4: Encode categorical labels into numeric IDs.
-    print("Step 5/9: Encoding labels...")
+    print("Step 4/9: Encoding labels...")
     label_encoder = LabelEncoder()
     labels = label_encoder.fit_transform(resumes_df["Category"])
 
-    # Step 5: Convert text into numbers (Vectorization). 
-    print("Step 6/10: Vectorizing text with TF-IDF (word + char)...")
-    
-    # TF-IDF vectorization: word-level for vocabulary, char-level for spelling patterns.
+    print("Step 5/9: Vectorizing text with TF-IDF (word + char)...")
     word_vectorizer = TfidfVectorizer(
         max_features=20000,
         ngram_range=(1, 2),
@@ -81,10 +70,7 @@ def main() -> None:
     char_features = char_vectorizer.fit_transform(resumes_df["clean_resume"])
     features = hstack([word_features, char_features])
 
-    # Step 6: Test the model's reliability using Cross-Validation.
-    print("Step 7/10: Running cross-validation (5-fold, macro F1)...")
-    
-    # 5-fold Stratified K-Fold cross-validation for robust performance estimation.
+    print("Step 6/9: Running cross-validation (5-fold, macro F1)...")
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
     cv_model = LinearSVC(class_weight="balanced")
     cv_scores = cross_val_score(
@@ -101,8 +87,7 @@ def main() -> None:
     )
     print(f"CV macro F1 mean: {cv_scores.mean():.3f}")
 
-    # Step 7: Train/test split (80/20) with label stratification.
-    print("Step 8/10: Splitting train/test data (80/20)...")
+    print("Step 7/9: Splitting train/test data (80/20)...")
     X_train, X_test, y_train, y_test = train_test_split(
         features,
         labels,
@@ -111,10 +96,7 @@ def main() -> None:
         stratify=labels,
     )
 
-    # Step 8: Train the final machine learning classifier on the 80% training data.
-    print("Step 9/10: Training LinearSVC model...")
-    
-    # Initialize and train LinearSVC classifier.
+    print("Step 8/9: Training LinearSVC model...")
     model = LinearSVC(class_weight="balanced")
     model.fit(X_train, y_train)
 
@@ -134,7 +116,7 @@ def main() -> None:
         )
     )
 
-    print("Saving model artifacts to models/...")
+    print("Step 9/9: Saving model artifacts to models/...")
     models_dir.mkdir(parents=True, exist_ok=True)
     joblib.dump(model, models_dir / "job_classifier.pkl")
     joblib.dump(
@@ -143,6 +125,7 @@ def main() -> None:
     )
     joblib.dump(label_encoder, models_dir / "label_encoder.pkl")
 
+    # Update job descriptions with combined full_jd_text column
     print("Updating job_descriptions_clean.csv with full_jd_text...")
     if not job_desc_path.exists():
         raise FileNotFoundError(f"Missing dataset: {job_desc_path}")
@@ -152,7 +135,6 @@ def main() -> None:
         if column_name not in job_desc_df.columns:
             raise ValueError(f"Missing column in job descriptions: {column_name}")
 
-    # Concatenate relevant fields to form the full job description text.
     job_desc_df["full_jd_text"] = (
         job_desc_df["Job Description"].fillna("")
         + " "

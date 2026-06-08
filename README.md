@@ -5,29 +5,26 @@
   <img src="https://img.shields.io/badge/Flask-3.1.3-black.svg" alt="Flask">
   <img src="https://img.shields.io/badge/scikit--learn-1.8.0-orange.svg" alt="scikit-learn">
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
-  <img src="https://img.shields.io/badge/Hugging%20Face-Spaces-yellow.svg" alt="Hugging Face">
 </p>
 
-ResumeFit AI analyzes resumes against job descriptions to provide a compatibility score and skill gap analysis.
-
-**Live Demo**: [https://huggingface.co/spaces/litch07/resumefit-ai](https://huggingface.co/spaces/litch07/resumefit-ai)
+ResumeFit AI analyzes a resume against a job description and returns a match score, missing keywords, improvement suggestions, and predicted job roles — all running locally with no sign-up or data storage.
 
 ## Features
 
-- Match score from 0 to 100 showing how well the resume fits the job description
-- Missing keyword detection highlighting terms from the job description not found in the resume
-- Improvement suggestions as a prioritized action list
-- Job role prediction showing the top 3 most likely categories based on resume content
-- Support for PDF, DOCX, and TXT resume formats
-- No sign-up, no data storage, no external APIs
+- Match score from 0 to 100 based on semantic similarity between the resume and job description
+- Missing keyword detection showing which job description terms are absent from the resume
+- Improvement suggestions as a prioritized action list derived from the missing keywords
+- Job role prediction showing the top 3 most likely career categories based on resume content
+- Accepts PDF, DOCX, and TXT resume formats
+- No external APIs — all inference runs on the user's machine
 
 ## How It Works
 
 1. **Upload** — the user uploads a resume (PDF, DOCX, or TXT) and pastes a job description into the text area.
-2. **Parse** — the system extracts raw text from the file using pdfplumber, PyPDF2, or python-docx.
-3. **Analyse** — SBERT generates semantic embeddings for both texts and cosine similarity produces a match score.
+2. **Parse** — the system extracts raw text using pdfplumber, PyPDF2 (fallback), or python-docx depending on the file type.
+3. **Analyse** — SBERT (all-MiniLM-L6-v2) generates embeddings for both texts and cosine similarity produces a match score from 0 to 100.
 4. **Keywords** — TF-IDF and RAKE extract important terms from the job description and identify which are missing from the resume.
-5. **Results** — the UI shows the match score, missing keywords, improvement suggestions, and predicted job roles — all without a page reload.
+5. **Results** — the browser displays the match score, missing keywords, improvement suggestions, and predicted job roles without a page reload.
 
 ## Tech Stack
 
@@ -43,6 +40,7 @@ ResumeFit AI analyzes resumes against job descriptions to provide a compatibilit
 ## Quick Start
 
 ### Prerequisites
+
 - Python 3.11+
 - Git
 
@@ -54,62 +52,67 @@ ResumeFit AI analyzes resumes against job descriptions to provide a compatibilit
    cd resumefit-ai
    ```
 
-2. **Create and activate a virtual environment**
-   
+2. **Create a virtual environment**
+   ```bash
+   python -m venv venv
+   ```
+
+3. **Activate the virtual environment**
+
    *Windows (PowerShell):*
    ```powershell
-   python -m venv venv
    .\venv\Scripts\Activate.ps1
    ```
-   
-   *Mac/Linux (bash):*
+
+   *Mac/Linux:*
    ```bash
-   python3 -m venv venv
    source venv/bin/activate
    ```
 
-3. **Install dependencies**
+4. **Install dependencies**
    ```bash
    pip install -r requirements.txt
    ```
 
-4. **Download NLTK data**
+5. **Download NLTK data**
    ```bash
    python -m nltk.downloader stopwords punkt punkt_tab
    ```
 
-5. **Download Model Files**
-   Download the model files from GitHub Releases as described in the next section.
+6. **Download the model files**
 
-6. **Run the application**
+   Download the three `.pkl` files from [GitHub Releases](https://github.com/litch07/resumefit-ai/releases/latest) and place them in the `models/` folder. See the [Model Files](#model-files) section for details.
+
+7. **Run the application**
    ```bash
    python app.py
    ```
-   *Note: The first run automatically downloads the SBERT model (~90MB).*
 
-The app runs at `http://localhost:5000`.
+   The app runs at `http://localhost:5000`. The first run downloads the SBERT model (~90 MB) automatically.
 
-## Download Model Files
+## Model Files
 
-The trained machine learning models are distributed via GitHub Releases. They are not committed to the repository due to file size constraints.
-
-Link: [https://github.com/litch07/resumefit-ai/releases/latest](https://github.com/litch07/resumefit-ai/releases/latest)
+The trained model files are distributed via GitHub Releases and are not committed to this repository due to their size.
 
 Download these three files and place them in the `models/` directory:
+
 - `job_classifier.pkl`
 - `tfidf_vectorizer.pkl`
 - `label_encoder.pkl`
 
+**Releases link:** [https://github.com/litch07/resumefit-ai/releases/latest](https://github.com/litch07/resumefit-ai/releases/latest)
+
 ## Training Your Own Model (Optional)
 
-Users who want to retrain the model can use the included training script. The default model was trained on the Kaggle resume dataset. Training data is not included in this repository due to its size.
+To retrain the classifier, obtain the resume dataset from Kaggle and place the CSV files in `data/raw/`. Training data is not included in this repository due to file size and licensing constraints.
 
-Before training, the dataset requires cleaning to remove corrupted rows. See the data preparation steps in the project documentation at `/docs` once the app is running.
+Once the data is in place, run:
 
-To train the model, run:
 ```bash
 python src/trainer.py
 ```
+
+This will generate new `.pkl` files in the `models/` directory.
 
 ## Project Structure
 
@@ -119,8 +122,7 @@ resumefit-ai/
 ├── requirements.txt          # Pinned package dependencies
 ├── README.md
 ├── API.md                    # HTTP API reference
-├── Dockerfile                # Container configuration for deployment
-├── .dockerignore             # Files excluded from Docker builds
+├── LICENSE
 ├── .gitignore
 ├── models/                   # Downloaded .pkl model files (not in Git)
 │   ├── job_classifier.pkl
@@ -130,52 +132,48 @@ resumefit-ai/
 │   ├── parser.py             # Extracts text from PDF, DOCX, TXT
 │   ├── preprocessor.py       # Cleans and normalises text
 │   ├── keyword_extractor.py  # TF-IDF and RAKE keyword extraction
-│   ├── embedder.py           # SBERT embeddings and similarity
+│   ├── embedder.py           # SBERT embeddings and cosine similarity
 │   ├── scorer.py             # Main analysis orchestrator
-│   ├── predictor.py          # Job role prediction
+│   ├── predictor.py          # Job role prediction using LinearSVC
 │   └── trainer.py            # Standalone model training script
 ├── static/
 │   ├── style.css
 │   └── script.js
-└── templates/
-    ├── index.html
-    ├── docs.html
-    ├── privacy.html
-    ├── security.html
-    └── terms.html
+├── templates/
+│   ├── index.html
+│   ├── docs.html
+│   ├── privacy.html
+│   ├── security.html
+│   └── terms.html
+└── data/
+    ├── raw/                  # Original datasets (not in Git)
+    └── processed/            # Cleaned CSVs (not in Git)
 ```
 
 ## Model Performance
 
-The job classifier is a LinearSVC model trained on 2,457 resumes across 24 job categories using an 80/20 stratified train/test split. It uses dual TF-IDF features (word-level and character-level combined with `scipy.sparse.hstack`). Hyperparameter search confirmed `C=1.0` is optimal after testing `C=[0.1, 0.5, 1.0, 2.0, 5.0, 10.0]`.
-
-The predictor applies softmax normalization to the top N scores. This ensures confidence percentages are meaningful rather than returning low raw margins like 5-7%. Role names are returned in Title Case.
+The job classifier is a LinearSVC model trained on 2,457 resumes across 24 job categories using an 80/20 stratified train/test split. It uses dual TF-IDF features — word-level n-grams and character-level n-grams — combined with `scipy.sparse.hstack`. Hyperparameter search over `C = [0.1, 0.5, 1.0, 2.0, 5.0, 10.0]` confirmed that `C = 1.0` is optimal.
 
 | Metric | Score |
 | :--- | :--- |
-| **Test Accuracy** | 71.75% |
-| **CV Macro F1 Mean** | 0.659 (5-fold) |
-| **Best Category (DESIGNER)** | F1 0.89 |
+| Test Accuracy | 71.75% |
+| CV Macro F1 Mean | 0.659 (5-fold stratified) |
+| Best Category (DESIGNER) | F1 0.89 |
+| Weakest Category (BPO) | F1 0.00 |
 
-*Note: The BPO category achieved an F1 score of 0.00. This limitation is due to insufficient samples in the dataset, with only 4 test samples available for this category.*
-
-## Deployment
-
-The application uses Docker for deployment to Hugging Face Spaces. The included `Dockerfile` installs all system requirements and Python dependencies, then starts the Flask application. The `.dockerignore` file prevents local models and virtual environments from bloating the image.
-
-The `PORT` environment variable is read at startup, so the same image runs on local (port 5000) and Hugging Face Spaces (port 7860) without any code changes.
+The BPO category scores F1 0.00 not because the model is broken, but because only 4 test samples exist for that category after the train/test split. The training data simply does not have enough BPO examples to support reliable prediction.
 
 ## Troubleshooting
 
-- **Missing Model Files**: Ensure `job_classifier.pkl`, `tfidf_vectorizer.pkl`, and `label_encoder.pkl` are located in the `models/` directory.
-- **Port 5000 Already in Use**: Stop other services using the port, or change the port in `app.py`.
-- **NLTK Data Errors**: Run the NLTK download command listed in the Quick Start section.
-- **High Memory Usage on First Run**: The SBERT model downloads on the first execution. Ensure you have a stable internet connection and sufficient free RAM.
+- **Model files missing** — download `job_classifier.pkl`, `tfidf_vectorizer.pkl`, and `label_encoder.pkl` from [GitHub Releases](https://github.com/litch07/resumefit-ai/releases/latest) and place them in `models/`.
+- **NLTK data errors** — run `python -m nltk.downloader stopwords punkt punkt_tab` with the virtual environment active.
+- **PDF cannot be read** — scanned image PDFs contain no extractable text. The system requires a text-based PDF. Convert the document to DOCX or TXT before uploading.
+- **Port 5000 already in use** — stop the service using that port, or change the port number in `app.py`.
 
 ## Future Work
 
-- Interactive Editing and Recalculation
-- PDF Export of gap analysis report
+- Interactive editing and recalculation — edit the parsed resume and job description text directly on the results page and get an updated score without re-uploading the file.
+- PDF export of the gap analysis report including the match score, missing keywords, and improvement suggestions.
 
 ## License
 
