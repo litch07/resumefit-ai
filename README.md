@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="static/assets/logo.svg" alt="ResumeFit AI Logo" width="120" />
+</div>
+
 <h1 align="center">ResumeFit AI</h1>
 
 <p align="center">
