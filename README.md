@@ -11,6 +11,10 @@
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
 </p>
 
+<p align="center">
+  <b><a href="https://huggingface.co/spaces/litch07/resumefit-ai">🚀 Try the Live Demo on Hugging Face Spaces</a></b>
+</p>
+
 ResumeFit AI analyzes a resume against a job description and returns a match score, missing keywords, improvement suggestions, and predicted job roles — all running locally with no sign-up or data storage.
 
 ## Features
